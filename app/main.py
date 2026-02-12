@@ -1,3 +1,5 @@
+import re
+import subprocess
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -9,9 +11,6 @@ from pynvml import (
     nvmlDeviceGetHandleByIndex,
     nvmlDeviceGetTemperature,
     nvmlDeviceGetFanSpeed,
-    nvmlDeviceGetComputeRunningProcesses,
-    nvmlDeviceGetGraphicsRunningProcesses,
-    nvmlSystemGetProcessName,
     NVML_TEMPERATURE_GPU,
     NVMLError,
 )
@@ -59,24 +58,31 @@ def gpu_metrics():
 @app.get("/api/gpu/processes")
 def gpu_processes():
     try:
-        handle = nvmlDeviceGetHandleByIndex(0)
-        compute = nvmlDeviceGetComputeRunningProcesses(handle)
-        graphics = nvmlDeviceGetGraphicsRunningProcesses(handle)
+        result = subprocess.run(
+            ["nvidia-smi"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode != 0:
+            return {"error": result.stderr.strip() or "nvidia-smi failed"}
 
-        seen = {}
-        for proc in compute + graphics:
-            if proc.pid in seen:
+        processes = []
+        seen = set()
+        for match in re.finditer(
+            r"\|\s+\d+\s+\S+\s+\S+\s+(\d+)\s+\w+\s+(.+?)\s+(\d+)\s*MiB\s*\|",
+            result.stdout,
+        ):
+            pid = int(match.group(1))
+            if pid in seen:
                 continue
-            try:
-                name = nvmlSystemGetProcessName(proc.pid)
-            except NVMLError:
-                name = "unknown"
-            seen[proc.pid] = {
-                "pid": proc.pid,
-                "name": name,
-                "used_gpu_memory_bytes": proc.usedGpuMemory,
-            }
+            seen.add(pid)
+            processes.append({
+                "pid": pid,
+                "name": match.group(2).strip(),
+                "used_gpu_memory_bytes": int(match.group(3)) * 1024 * 1024,
+            })
 
-        return {"processes": list(seen.values())}
-    except NVMLError as e:
+        return {"processes": processes}
+    except Exception as e:
         return {"error": str(e)}

@@ -72,6 +72,10 @@ curl http://localhost:8001/api/gpu/processes
 }
 ```
 
+## Notas
+
+El endpoint `/api/gpu/processes` usa `nvidia-smi` para listar procesos GPU del host. Esto resuelve la limitacion de la API NVML de Python que dentro de Docker Desktop (WSL2) solo ve procesos del container.
+
 ## Licencia
 
 MIT
