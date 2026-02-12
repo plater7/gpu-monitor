@@ -9,6 +9,9 @@ from pynvml import (
     nvmlDeviceGetHandleByIndex,
     nvmlDeviceGetTemperature,
     nvmlDeviceGetFanSpeed,
+    nvmlDeviceGetComputeRunningProcesses,
+    nvmlDeviceGetGraphicsRunningProcesses,
+    nvmlSystemGetProcessName,
     NVML_TEMPERATURE_GPU,
     NVMLError,
 )
@@ -49,5 +52,31 @@ def gpu_metrics():
             "temperature_c": temperature,
             "fan_speed_percent": fan_speed,
         }
+    except NVMLError as e:
+        return {"error": str(e)}
+
+
+@app.get("/api/gpu/processes")
+def gpu_processes():
+    try:
+        handle = nvmlDeviceGetHandleByIndex(0)
+        compute = nvmlDeviceGetComputeRunningProcesses(handle)
+        graphics = nvmlDeviceGetGraphicsRunningProcesses(handle)
+
+        seen = {}
+        for proc in compute + graphics:
+            if proc.pid in seen:
+                continue
+            try:
+                name = nvmlSystemGetProcessName(proc.pid)
+            except NVMLError:
+                name = "unknown"
+            seen[proc.pid] = {
+                "pid": proc.pid,
+                "name": name,
+                "used_gpu_memory_bytes": proc.usedGpuMemory,
+            }
+
+        return {"processes": list(seen.values())}
     except NVMLError as e:
         return {"error": str(e)}

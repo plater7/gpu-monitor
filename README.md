@@ -39,10 +39,11 @@ Dashboard web con metricas en tiempo real accesible en `/`. Muestra cards con te
 | Metodo | Ruta          | Descripcion                              |
 |--------|---------------|------------------------------------------|
 | GET    | `/`           | Dashboard web con metricas en tiempo real |
-| GET    | `/api/health` | Healthcheck                               |
-| GET    | `/api/gpu`    | Temperatura y fan speed de la GPU (JSON)  |
+| GET    | `/api/health`         | Healthcheck                               |
+| GET    | `/api/gpu`            | Temperatura y fan speed de la GPU (JSON)  |
+| GET    | `/api/gpu/processes`  | Procesos activos en la GPU (PID y nombre) |
 
-## Ejemplo de respuesta
+## Ejemplos de respuesta
 
 ```bash
 curl http://localhost:8001/api/gpu
@@ -52,6 +53,22 @@ curl http://localhost:8001/api/gpu
 {
   "temperature_c": 45,
   "fan_speed_percent": 30
+}
+```
+
+```bash
+curl http://localhost:8001/api/gpu/processes
+```
+
+```json
+{
+  "processes": [
+    {
+      "pid": 1234,
+      "name": "/usr/bin/python3",
+      "used_gpu_memory_bytes": 524288000
+    }
+  ]
 }
 ```
 
