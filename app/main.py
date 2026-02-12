@@ -1,4 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pynvml import (
     nvmlInit,
     nvmlShutdown,
@@ -11,6 +15,9 @@ from pynvml import (
 
 app = FastAPI(title="GPU Monitor")
 
+static_dir = Path(__file__).parent / "static"
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
+
 
 @app.on_event("startup")
 def startup():
@@ -20,6 +27,11 @@ def startup():
 @app.on_event("shutdown")
 def shutdown():
     nvmlShutdown()
+
+
+@app.get("/")
+def dashboard():
+    return FileResponse(static_dir / "index.html")
 
 
 @app.get("/api/health")
