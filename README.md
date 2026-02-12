@@ -28,14 +28,19 @@ nvidia-ctk runtime configure --runtime=docker --config=$HOME/.config/docker/daem
 docker compose up --build
 ```
 
-La API queda disponible en `http://localhost:8001`.
+La app queda disponible en `http://localhost:8001`.
+
+## Frontend
+
+Dashboard web con metricas en tiempo real accesible en `/`. Muestra cards con temperatura y fan speed de la GPU, con auto-refresh cada 5 segundos. Incluye un grafico de linea (Chart.js) con el historial de temperatura.
 
 ## Endpoints
 
 | Metodo | Ruta          | Descripcion                              |
 |--------|---------------|------------------------------------------|
-| GET    | `/api/health` | Healthcheck                              |
-| GET    | `/api/gpu`    | Temperatura y fan speed de la GPU (JSON) |
+| GET    | `/`           | Dashboard web con metricas en tiempo real |
+| GET    | `/api/health` | Healthcheck                               |
+| GET    | `/api/gpu`    | Temperatura y fan speed de la GPU (JSON)  |
 
 ## Ejemplo de respuesta
 
