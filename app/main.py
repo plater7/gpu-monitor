@@ -74,7 +74,7 @@ def gpu_processes():
             seen[proc.pid] = {
                 "pid": proc.pid,
                 "name": name,
-                "used_gpu_memory_bytes": proc.usedGpuMemory,
+                "used_gpu_memory_bytes": proc.usedGpuMemory or 0,
             }
 
         return {"processes": list(seen.values())}

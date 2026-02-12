@@ -72,6 +72,10 @@ curl http://localhost:8001/api/gpu/processes
 }
 ```
 
+## Notas
+
+El container usa `pid: host` en docker-compose para compartir el PID namespace del host. Esto permite que NVML vea todos los procesos del sistema que usan la GPU (no solo los del container).
+
 ## Licencia
 
 MIT
