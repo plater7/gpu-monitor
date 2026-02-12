@@ -1,3 +1,4 @@
+import re
 import subprocess
 from pathlib import Path
 
@@ -58,48 +59,30 @@ def gpu_metrics():
 def gpu_processes():
     try:
         result = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-compute-apps=pid,process_name,used_gpu_memory",
-                "--format=csv,noheader,nounits",
-            ],
+            ["nvidia-smi"],
             capture_output=True,
             text=True,
             timeout=5,
         )
-        compute_lines = result.stdout.strip().splitlines() if result.stdout.strip() else []
+        if result.returncode != 0:
+            return {"error": result.stderr.strip() or "nvidia-smi failed"}
 
-        result = subprocess.run(
-            [
-                "nvidia-smi",
-                "--query-graphics-apps=pid,process_name,used_gpu_memory",
-                "--format=csv,noheader,nounits",
-            ],
-            capture_output=True,
-            text=True,
-            timeout=5,
-        )
-        graphics_lines = result.stdout.strip().splitlines() if result.stdout.strip() else []
-
-        seen = {}
-        for line in compute_lines + graphics_lines:
-            parts = [p.strip() for p in line.split(",")]
-            if len(parts) < 3:
-                continue
-            pid = int(parts[0])
+        processes = []
+        seen = set()
+        for match in re.finditer(
+            r"\|\s+\d+\s+\S+\s+\S+\s+(\d+)\s+\w+\s+(.+?)\s+(\d+)\s*MiB\s*\|",
+            result.stdout,
+        ):
+            pid = int(match.group(1))
             if pid in seen:
                 continue
-            name = parts[1] if parts[1] != "[N/A]" else "unknown"
-            try:
-                mem = int(parts[2]) * 1024 * 1024
-            except (ValueError, TypeError):
-                mem = 0
-            seen[pid] = {
+            seen.add(pid)
+            processes.append({
                 "pid": pid,
-                "name": name,
-                "used_gpu_memory_bytes": mem,
-            }
+                "name": match.group(2).strip(),
+                "used_gpu_memory_bytes": int(match.group(3)) * 1024 * 1024,
+            })
 
-        return {"processes": list(seen.values())}
+        return {"processes": processes}
     except Exception as e:
         return {"error": str(e)}
