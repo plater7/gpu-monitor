@@ -4,8 +4,15 @@ services:
     ports:
       - "8001:8001"
     pid: host
+    environment:
+      - RETENTION_DAYS=${RETENTION_DAYS:-7}
+      - SAMPLE_INTERVAL=${SAMPLE_INTERVAL:-5}
+      - ALERT_WEBHOOK=${ALERT_WEBHOOK:-}
     deploy:
       resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
         reservations:
           devices:
             - driver: nvidia
