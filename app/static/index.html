@@ -110,6 +110,14 @@
             <div class="value" id="fan">--<span class="unit">%</span></div>
             <div class="mode" id="fanMode"></div>
         </div>
+        <div class="card">
+            <div class="label">GPU Clock</div>
+            <div class="value" id="gpuClock">--<span class="unit">MHz</span></div>
+        </div>
+        <div class="card">
+            <div class="label">Memory Clock</div>
+            <div class="value" id="memClock">--<span class="unit">MHz</span></div>
+        </div>
     </div>
 
     <div class="chart-container">
@@ -164,6 +172,8 @@
         const tempEl = document.getElementById('temp');
         const fanEl = document.getElementById('fan');
         const fanModeEl = document.getElementById('fanMode');
+        const gpuClockEl = document.getElementById('gpuClock');
+        const memClockEl = document.getElementById('memClock');
 
         const FAN_MODE_LABELS = {
             'active': 'Spinning',
@@ -194,6 +204,18 @@
                 if (data.fan_mode) {
                     fanModeEl.textContent = FAN_MODE_LABELS[data.fan_mode] || data.fan_mode;
                     fanModeEl.className = 'mode ' + data.fan_mode;
+                }
+
+                if (data.gpu_clock_mhz !== null) {
+                    gpuClockEl.innerHTML = data.gpu_clock_mhz + '<span class="unit">MHz</span>';
+                } else {
+                    gpuClockEl.innerHTML = 'N/A';
+                }
+
+                if (data.memory_clock_mhz !== null) {
+                    memClockEl.innerHTML = data.memory_clock_mhz + '<span class="unit">MHz</span>';
+                } else {
+                    memClockEl.innerHTML = 'N/A';
                 }
 
                 const now = new Date().toLocaleTimeString();
