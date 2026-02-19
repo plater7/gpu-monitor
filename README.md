@@ -1,61 +1,97 @@
 # GPU Monitor
 
-Aplicacion web dockerizada de monitoreo de GPU usando NVIDIA Container Toolkit.
+<p align="center">
+  <img src="https://img.shields.io/badge/NVIDIA-GPU-76B900?style=for-the-badge&logo=nvidia&logoColor=white" alt="NVIDIA GPU">
+  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Ready">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+</p>
 
-Expone una API REST (FastAPI) que reporta temperatura y velocidad de fans de la GPU en tiempo real, corriendo dentro de un container con acceso directo al hardware NVIDIA via NVML.
+<p align="center">
+  <img src="https://img.shields.io/github/license/plater7/gpu-monitor?style=flat-square" alt="License">
+  <img src="https://img.shields.io/github/stars/plater7/gpu-monitor?style=flat-square" alt="Stars">
+  <img src="https://img.shields.io/github/issues/plater7/gpu-monitor?style=flat-square" alt="Issues">
+  <img src="https://img.shields.io/github/actions/workflow/status/plater7/gpu-monitor/ci.yml?branch=main&style=flat-square" alt="CI Status">
+</p>
 
-## Requisitos
+> Real-time NVIDIA GPU monitoring dashboard with REST API
 
-- Docker con [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) instalado
-- GPU NVIDIA con drivers instalados en el host
+A Dockerized web application for monitoring NVIDIA GPUs using the NVIDIA Container Toolkit. Exposes a FastAPI REST API reporting temperature, fan speed, and running processes in real-time, running inside a container with direct hardware access via NVML.
 
-Configurar Docker para usar el runtime de NVIDIA:
+---
+
+## Features
+
+- **Real-time Dashboard** - Live GPU metrics with auto-refresh
+- **Temperature Monitoring** - Current temp + historical chart
+- **Fan Speed Detection** - Smart zero-RPM mode detection
+- **Process Listing** - See all GPU processes (PIDs, names, memory)
+- **REST API** - Clean JSON endpoints for integration
+- **Docker Ready** - One-command deployment
+
+---
+
+## Requirements
+
+- **Docker** with [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html)
+- **NVIDIA GPU** with drivers installed on host
+
+Configure Docker for NVIDIA runtime:
 
 ```bash
 sudo nvidia-ctk runtime configure --runtime=docker
 sudo systemctl restart docker
 ```
 
-Para rootless Docker:
+For rootless Docker:
 
 ```bash
 nvidia-ctk runtime configure --runtime=docker --config=$HOME/.config/docker/daemon.json
 ```
 
-## Como correrlo
+---
+
+## Quick Start
 
 ```bash
 docker compose up --build
 ```
 
-La app queda disponible en `http://localhost:8001`.
+Access the dashboard at **http://localhost:8001**
 
-## Frontend
+---
 
-Dashboard web con metricas en tiempo real accesible en `/`. Muestra cards con temperatura y fan speed de la GPU, con auto-refresh cada 5 segundos. Incluye un grafico de linea (Chart.js) con el historial de temperatura.
+## API Reference
 
-## Endpoints
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/` | Web dashboard with live metrics |
+| `GET` | `/api/health` | Health check |
+| `GET` | `/api/gpu` | GPU temperature and fan info |
+| `GET` | `/api/gpu/processes` | Active GPU processes |
 
-| Metodo | Ruta          | Descripcion                              |
-|--------|---------------|------------------------------------------|
-| GET    | `/`           | Dashboard web con metricas en tiempo real |
-| GET    | `/api/health`         | Healthcheck                               |
-| GET    | `/api/gpu`            | Temperatura y fan speed de la GPU (JSON)  |
-| GET    | `/api/gpu/processes`  | Procesos activos en la GPU (PID y nombre) |
+### Examples
 
-## Ejemplos de respuesta
-
+**Get GPU metrics:**
 ```bash
 curl http://localhost:8001/api/gpu
 ```
 
 ```json
 {
-  "temperature_c": 45,
-  "fan_speed_percent": 30
+  "temperature_c": 54,
+  "fan_speed_percent": 0,
+  "fan_mode": "stopped"
 }
 ```
 
+**Fan modes:**
+- `"active"` - Fans spinning
+- `"stopped"` - Zero-RPM mode (fans idle)
+- `"not_supported"` - GPU has no fans (e.g., datacenter cards)
+- `"unknown"` - Unable to determine
+
+**Get GPU processes:**
 ```bash
 curl http://localhost:8001/api/gpu/processes
 ```
@@ -67,11 +103,59 @@ curl http://localhost:8001/api/gpu/processes
       "pid": 1234,
       "name": "/usr/bin/python3",
       "used_gpu_memory_bytes": 524288000
+    },
+    {
+      "pid": 5678,
+      "name": "/usr/lib/firefox/firefox",
+      "used_gpu_memory_bytes": 209715200
     }
   ]
 }
 ```
 
-## Licencia
+---
 
-MIT
+## Screenshots
+
+The dashboard features:
+- Temperature card with live updates
+- Fan speed card with mode indicator
+- Temperature history chart (60-point rolling window)
+- Connection status indicator
+
+---
+
+## Development
+
+### Project Structure
+
+```
+gpu-monitor/
+├── app/
+│   ├── main.py         # FastAPI application
+│   └── static/
+│       └── index.html  # Dashboard frontend
+├── Dockerfile
+├── docker-compose.yml
+├── requirements.txt
+└── README.md
+```
+
+### Local Development
+
+```bash
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8001
+```
+
+---
+
+## License
+
+[MIT](LICENSE)
+
+---
+
+<p align="center">
+  <sub>Built with 🤖 AI assistance by <a href="https://github.com/features/copilot">OpenCode</a></sub>
+</p>

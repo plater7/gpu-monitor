@@ -68,6 +68,15 @@
             color: #888;
             margin-left: 2px;
         }
+        .card .mode {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 8px;
+            text-transform: uppercase;
+        }
+        .card .mode.active { color: #76b900; }
+        .card .mode.stopped { color: #f4a623; }
+        .card .mode.not_supported, .card .mode.unknown { color: #666; }
         .chart-container {
             max-width: 800px;
             margin: 0 auto;
@@ -99,6 +108,7 @@
         <div class="card">
             <div class="label">Fan Speed</div>
             <div class="value" id="fan">--<span class="unit">%</span></div>
+            <div class="mode" id="fanMode"></div>
         </div>
     </div>
 
@@ -153,6 +163,14 @@
         const statusEl = document.getElementById('status');
         const tempEl = document.getElementById('temp');
         const fanEl = document.getElementById('fan');
+        const fanModeEl = document.getElementById('fanMode');
+
+        const FAN_MODE_LABELS = {
+            'active': 'Spinning',
+            'stopped': 'Zero-RPM',
+            'not_supported': 'No Fans',
+            'unknown': 'Unknown'
+        };
 
         async function fetchMetrics() {
             try {
@@ -166,7 +184,17 @@
                 }
 
                 tempEl.innerHTML = data.temperature_c + '<span class="unit">&deg;C</span>';
-                fanEl.innerHTML = data.fan_speed_percent + '<span class="unit">%</span>';
+
+                if (data.fan_speed_percent !== null) {
+                    fanEl.innerHTML = data.fan_speed_percent + '<span class="unit">%</span>';
+                } else {
+                    fanEl.innerHTML = 'N/A';
+                }
+
+                if (data.fan_mode) {
+                    fanModeEl.textContent = FAN_MODE_LABELS[data.fan_mode] || data.fan_mode;
+                    fanModeEl.className = 'mode ' + data.fan_mode;
+                }
 
                 const now = new Date().toLocaleTimeString();
                 labels.push(now);
